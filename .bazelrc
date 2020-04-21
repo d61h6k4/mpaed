@@ -1,0 +1,75 @@
+# Basic build settings
+build --jobs 16
+build --define='absl=1'
+build --cxxopt='-std=c++14'
+build --copt='-Wno-sign-compare'
+build --copt='-Wno-unused-function'
+build --copt='-Wno-uninitialized'
+build --copt='-Wno-unused-result'
+build --copt='-Wno-comment'
+build --copt='-Wno-return-type'
+build --copt='-Wno-unused-local-typedefs'
+build --copt='-Wno-ignored-attributes'
+# Tensorflow needs remote repo
+build --experimental_repo_remote_exec
+
+# Sets the default Apple platform to macOS.
+build --apple_platform_type=macos
+
+
+# Allow debugging with XCODE
+build --apple_generate_dsym
+
+# Optimizations used for TF Serving release builds.
+build:release --copt=-mavx
+build:release --copt=-msse4.2
+build:release --copt=-mavx2
+build:release --copt=-mavx512f
+build:release --copt=-mfma
+#
+# This config refers to building with CUDA available. It does not necessarily
+# mean that we build CUDA op kernels.
+build:using_cuda --define=using_cuda=true
+build:using_cuda --action_env TF_NEED_CUDA=1
+build:using_cuda --crosstool_top=@local_config_cuda//crosstool:toolchain
+
+# This config refers to building CUDA op kernels with nvcc.
+build:cuda --config=using_cuda
+build:cuda --define=using_cuda_nvcc=true
+
+# Address sanitizer
+# To use it: bazel build --config asan
+build:asan --strip=never
+build:asan --copt -fsanitize=address
+build:asan --copt -DADDRESS_SANITIZER
+build:asan --copt -O1
+build:asan --copt -g
+build:asan --copt -fno-omit-frame-pointer
+build:asan --linkopt -fsanitize=address
+
+# Thread sanitizer
+# bazel build --config tsan
+build:tsan --strip=never
+build:tsan --copt -fsanitize=thread
+build:tsan --copt -DTHREAD_SANITIZER
+build:tsan --copt -DDYNAMIC_ANNOTATIONS_ENABLED=1
+build:tsan --copt -DDYNAMIC_ANNOTATIONS_EXTERNAL_IMPL=1
+build:tsan --copt -O1
+build:tsan --copt -fno-omit-frame-pointer
+build:tsan --linkopt -fsanitize=thread
+
+# --config msan: Memory sanitizer
+build:msan --strip=never
+build:msan --copt -fsanitize=memory
+build:msan --copt -DADDRESS_SANITIZER
+build:msan --copt -O1
+build:msan --copt -fno-omit-frame-pointer
+build:msan --linkopt -fsanitize=memory
+
+# --config ubsan: Undefined Behavior Sanitizer
+build:ubsan --strip=never
+build:ubsan --copt -fsanitize=undefined
+build:ubsan --copt -O1
+build:ubsan --copt -fno-omit-frame-pointer
+build:ubsan --linkopt -fsanitize=undefined
+build:ubsan --linkopt -lubsan
